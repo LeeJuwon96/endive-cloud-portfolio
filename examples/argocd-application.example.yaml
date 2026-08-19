@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: endive-service
+  namespace: argocd
+  labels:
+    endive.io/region: seoul
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/example/endive-service.git
+    targetRevision: main
+    path: gitops/overlays/seoul
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
