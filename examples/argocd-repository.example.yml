@@ -1,0 +1,33 @@
+---
+- name: Argo CD Repository Secret 복구 예시
+  hosts: role_master
+  become: true
+  gather_facts: false
+  vars_files:
+    - ../../group_vars/all/vault.yml
+
+  tasks:
+    - name: Vault 변수 확인
+      assert:
+        that:
+          - github_repository_username | length > 0
+          - github_repository_token | length > 0
+
+    - name: Repository Secret 적용
+      command: kubectl apply -f -
+      args:
+        stdin: |
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: endive-service-repository
+            namespace: argocd
+            labels:
+              argocd.argoproj.io/secret-type: repository
+          type: Opaque
+          stringData:
+            type: git
+            url: "https://github.com/example/endive-service.git"
+            username: {{ github_repository_username | to_json }}
+            password: {{ github_repository_token | to_json }}
+      no_log: true

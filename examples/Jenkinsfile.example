@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('소스 검증') {
+            steps {
+                sh 'python -m compileall service/'
+            }
+        }
+
+        stage('이미지 빌드') {
+            steps {
+                script {
+                    def shortCommit = sh(
+                        script: 'git rev-parse --short HEAD',
+                        returnStdout: true
+                    ).trim()
+                    env.IMAGE_TAG = "${BUILD_NUMBER}-${shortCommit}"
+                }
+                sh 'docker build -t "endive-service:${IMAGE_TAG}" .'
+            }
+        }
+
+        stage('main 이미지 Push') {
+            when { branch 'main' }
+            steps {
+                echo '실제 환경에서는 Jenkins Credentials로 ECR 인증 후 Push합니다.'
+            }
+        }
+
+        stage('GitOps 태그 갱신') {
+            when { branch 'main' }
+            steps {
+                echo '서울·도쿄 overlay의 newTag를 같은 불변 태그로 갱신합니다.'
+            }
+        }
+    }
+}
